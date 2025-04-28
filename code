@@ -1,0 +1,93 @@
+
+
+### **Example: Producer-Consumer Using Mailbox and Queue**
+
+---
+
+#### **Problem:**
+- A **Producer** sends random numbers into a **Mailbox**.
+- A **Consumer** collects numbers from the mailbox and stores them into a **Queue** for later use.
+
+---
+
+#### **SystemVerilog Code:**
+
+```systemverilog
+module mailbox_queue_example;
+
+    mailbox mbox;       // Declare a mailbox
+    int q[$];           // Declare a queue
+
+    initial begin
+        mbox = new();   // Create an unbounded mailbox
+
+        fork
+            // Producer process
+            begin
+                repeat (5) begin
+                    int random_number;
+                    random_number = $urandom_range(1, 100); // generate random number
+                    mbox.put(random_number);               // send into mailbox
+                    $display("Producer: Sent %0d", random_number);
+                    #10; // wait a bit
+                end
+            end
+
+            // Consumer process
+            begin
+                repeat (5) begin
+                    int received_number;
+                    mbox.get(received_number);    // retrieve from mailbox
+                    q.push_back(received_number); // store in queue
+                    $display("Consumer: Received %0d", received_number);
+                    #5;
+                end
+
+                $display("Final Queue Contents: %p", q);
+            end
+        join
+    end
+
+endmodule
+```
+
+---
+
+#### **Expected Output:**
+(Sample output, values will vary because of randomization)
+
+```
+Producer: Sent 57
+Consumer: Received 57
+Producer: Sent 12
+Consumer: Received 12
+Producer: Sent 89
+Consumer: Received 89
+Producer: Sent 23
+Consumer: Received 23
+Producer: Sent 76
+Consumer: Received 76
+Final Queue Contents: '{57, 12, 89, 23, 76}
+```
+
+---
+
+### **Explanation:**
+
+- **Producer** generates **5 random numbers** and puts them into the **mailbox**.
+- **Consumer** takes each number from the **mailbox** and stores them into the **queue**.
+- Finally, **queue** contains all the received numbers in order.
+- **Synchronization** happens automatically because **mailbox `get` blocks** until data is available.
+
+---
+
+### **Key Points:**
+
+| Concept             | Explanation                                  |
+|---------------------|----------------------------------------------|
+| `mbox.put(data)`     | Producer sends data |
+| `mbox.get(data)`     | Consumer retrieves data (blocking) |
+| `q.push_back(data)`  | Insert retrieved data into a queue |
+| `$urandom_range(a,b)`| Generate random number between `a` and `b` |
+| `$display("%p", q)`  | Print queue contents nicely |
+
